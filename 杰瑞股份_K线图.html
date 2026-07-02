@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>杰瑞股份 (002353) — K线图</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: #f5f6fa;
+            color: #2c3e50;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        .header {
+            padding: 28px 32px 20px;
+            border-bottom: 1px solid #eef0f5;
+        }
+        .header-top {
+            display: flex;
+            align-items: baseline;
+            gap: 16px;
+            margin-bottom: 8px;
+        }
+        .stock-name {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+        .stock-code {
+            font-size: 16px;
+            color: #888;
+            font-weight: 400;
+        }
+        .header-info {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            font-size: 14px;
+            color: #666;
+        }
+        .header-info span { white-space: nowrap; }
+        .price-panel {
+            display: flex;
+            gap: 28px;
+            padding: 20px 32px;
+            border-bottom: 1px solid #eef0f5;
+            align-items: center;
+        }
+        .price-current {
+            font-size: 36px;
+            font-weight: 700;
+        }
+        .price-up { color: #e8343e; }
+        .price-down { color: #1baa46; }
+        .price-flat { color: #888; }
+        .price-change {
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0;
+            padding: 0 32px 20px;
+            border-bottom: 1px solid #eef0f5;
+        }
+        .stat-item {
+            padding: 12px 0;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 4px;
+        }
+        .stat-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+        .chart-section {
+            padding: 16px 16px 0;
+        }
+        .chart-kline {
+            width: 100%;
+            height: 520px;
+        }
+        .chart-volume {
+            width: 100%;
+            height: 180px;
+        }
+        .footer-note {
+            padding: 12px 32px 20px;
+            font-size: 12px;
+            color: #bbb;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <span class="stock-name">杰瑞股份</span>
+                <span class="stock-code">002353.SZ</span>
+            </div>
+            <div class="header-info">
+                <span>🏭 行业：化工机械</span>
+                <span>📍 地区：山东</span>
+                <span>📋 市场：深交所主板</span>
+                <span>📅 上市：2010-02-05</span>
+            </div>
+        </div>
+
+        <div class="price-panel" id="pricePanel"></div>
+        <div class="stats" id="statsPanel"></div>
+
+        <div class="chart-section">
+            <div class="chart-kline" id="chartKline"></div>
+            <div class="chart-volume" id="chartVolume"></div>
+        </div>
+
+        <div class="footer-note">
+            数据来源：Tushare | K线周期：日线 | 更新至 2025-07-02
+        </div>
+    </div>
+
+    <script>
+        // ---- 原始行情数据（按日期升序） ----
+        var rawData = [
+            { date: '2025-06-03', open: 34.50, high: 34.95, low: 34.38, close: 34.82, vol: 40902.19 },
+            { date: '2025-06-04', open: 34.85, high: 35.09, low: 34.51, close: 34.95, vol: 47503.80 },
+            { date: '2025-06-05', open: 34.94, high: 35.64, low: 34.60, close: 35.56, vol: 60516.54 },
+            { date: '2025-06-06', open: 35.64, high: 35.66, low: 34.75, close: 34.96, vol: 64354.10 },
+            { date: '2025-06-09', open: 34.93, high: 35.30, low: 34.51, close: 34.58, vol: 61423.32 },
+            { date: '2025-06-10', open: 34.58, high: 34.67, low: 33.97, close: 34.34, vol: 65815.79 },
+            { date: '2025-06-11', open: 34.22, high: 34.90, low: 34.13, close: 34.67, vol: 58175.28 },
+            { date: '2025-06-12', open: 34.70, high: 35.84, low: 34.70, close: 35.26, vol: 55788.02 },
+            { date: '2025-06-13', open: 36.51, high: 36.66, low: 35.75, close: 35.91, vol: 144394.77 },
+            { date: '2025-06-16', open: 36.05, high: 36.92, low: 36.05, close: 36.41, vol: 100856.57 },
+            { date: '2025-06-17', open: 36.23, high: 36.30, low: 35.74, close: 35.90, vol: 65250.06 },
+            { date: '2025-06-18', open: 36.04, high: 36.80, low: 35.95, close: 36.21, vol: 59630.24 },
+            { date: '2025-06-19', open: 36.11, high: 36.45, low: 35.68, close: 35.84, vol: 53894.48 },
+            { date: '2025-06-20', open: 35.82, high: 36.16, low: 35.70, close: 35.78, vol: 35779.20 },
+            { date: '2025-06-23', open: 36.06, high: 36.44, low: 35.34, close: 35.35, vol: 53603.37 },
+            { date: '2025-06-24', open: 35.36, high: 35.49, low: 34.14, close: 34.42, vol: 123290.79 },
+            { date: '2025-06-25', open: 34.41, high: 34.65, low: 34.21, close: 34.43, vol: 80572.80 },
+            { date: '2025-06-26', open: 34.49, high: 34.75, low: 34.15, close: 34.39, vol: 59823.70 },
+            { date: '2025-06-27', open: 34.50, high: 35.18, low: 34.26, close: 34.99, vol: 65132.92 },
+            { date: '2025-06-30', open: 35.15, high: 35.49, low: 34.80, close: 35.00, vol: 52328.00 },
+            { date: '2025-07-01', open: 35.00, high: 35.19, low: 34.69, close: 34.83, vol: 42190.00 },
+            { date: '2025-07-02', open: 35.00, high: 35.46, low: 34.88, close: 35.06, vol: 66536.54 }
+        ];
+
+        var dates = rawData.map(d => d.date);
+        var n = rawData.length;
+
+        // K线数据: [open, close, low, high]
+        var klineData = rawData.map(d => [d.open, d.close, d.low, d.high]);
+        var volData = rawData.map(d => [d.date, d.vol, d.close >= d.open ? 1 : -1]);
+
+        // ---- 计算均线 ----
+        function calcMA(data, period) {
+            var result = [];
+            for (var i = 0; i < data.length; i++) {
+                if (i < period - 1) {
+                    result.push(null);
+                } else {
+                    var sum = 0;
+                    for (var j = 0; j < period; j++) { sum += data[i - j].close; }
+                    result.push(+(sum / period).toFixed(2));
+                }
+            }
+            return result;
+        }
+        var ma5  = calcMA(rawData, 5);
+        var ma10 = calcMA(rawData, 10);
+        var ma20 = calcMA(rawData, 20);
+
+        // ---- 最新行情面板 ----
+        var last = rawData[n - 1];
+        var prev = rawData[n - 2];
+        var chg = +(last.close - prev.close).toFixed(2);
+        var chgPct = +((chg / prev.close) * 100).toFixed(2);
+        var colorClass = chg > 0 ? 'price-up' : (chg < 0 ? 'price-down' : 'price-flat');
+        var arrow = chg > 0 ? '▲' : (chg < 0 ? '▼' : '—');
+        document.getElementById('pricePanel').innerHTML =
+            '<span class="price-current ' + colorClass + '">¥' + last.close.toFixed(2) + '</span>' +
+            '<span class="price-change ' + colorClass + '">' + arrow + ' ' +
+            (chg > 0 ? '+' : '') + chg.toFixed(2) + ' (' +
+            (chgPct > 0 ? '+' : '') + chgPct.toFixed(2) + '%)</span>';
+
+        // ---- 统计面板 ----
+        var allHigh = Math.max.apply(null, rawData.map(d => d.high));
+        var allLow  = Math.min.apply(null, rawData.map(d => d.low));
+        var avgVol  = +(rawData.reduce((s, d) => s + d.vol, 0) / n).toFixed(0);
+        var totalAmt = rawData.reduce((s, d) => s + d.vol * (d.open + d.close + d.high + d.low) / 4, 0);
+        var upDays  = rawData.filter(d => d.close >= d.open).length;
+        var downDays = rawData.filter(d => d.close < d.open).length;
+        document.getElementById('statsPanel').innerHTML =
+            '<div class="stat-item"><div class="stat-label">区间最高</div><div class="stat-value price-up">¥' + allHigh.toFixed(2) + '</div></div>' +
+            '<div class="stat-item"><div class="stat-label">区间最低</div><div class="stat-value price-down">¥' + allLow.toFixed(2) + '</div></div>' +
+            '<div class="stat-item"><div class="stat-label">区间涨幅</div><div class="stat-value ' + ((last.close - rawData[0].close) >= 0 ? 'price-up' : 'price-down') + '">' +
+                ((last.close - rawData[0].close) >= 0 ? '+' : '') + (last.close - rawData[0].close).toFixed(2) +
+                ' (' + ((last.close - rawData[0].close) >= 0 ? '+' : '') + ((last.close - rawData[0].close) / rawData[0].close * 100).toFixed(2) + '%)</div></div>' +
+            '<div class="stat-item"><div class="stat-label">日均成交量</div><div class="stat-value">' + (avgVol / 100).toFixed(0) + ' 手</div></div>' +
+            '<div class="stat-item"><div class="stat-label">阳线 / 阴线</div><div class="stat-value"><span class="price-up">' + upDays + '</span> / <span class="price-down">' + downDays + '</span></div></div>' +
+            '<div class="stat-item"><div class="stat-label">数据天数</div><div class="stat-value">' + n + ' 个交易日</div></div>';
+
+        // ---- K线图 ----
+        var chartKline = echarts.init(document.getElementById('chartKline'));
+        chartKline.setOption({
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: { type: 'cross' },
+                backgroundColor: 'rgba(255,255,255,0.95)',
+                borderColor: '#ddd',
+                textStyle: { color: '#333', fontSize: 13 },
+                formatter: function(params) {
+                    var d = rawData[params[0].dataIndex];
+                    var color = d.close >= d.open ? '#e8343e' : '#1baa46';
+                    var ch = d.close - d.open;
+                    var chP = (ch / d.open * 100).toFixed(2);
+                    return '<div style="font-weight:700;margin-bottom:6px">' + d.date + '</div>' +
+                        '开盘：<b>' + d.open.toFixed(2) + '</b><br/>' +
+                        '收盘：<b style="color:' + color + '">' + d.close.toFixed(2) + '</b><br/>' +
+                        '最高：<b>' + d.high.toFixed(2) + '</b><br/>' +
+                        '最低：<b>' + d.low.toFixed(2) + '</b><br/>' +
+                        '涨跌：<b style="color:' + color + '">' + (ch >= 0 ? '+' : '') + ch.toFixed(2) + ' (' + (ch >= 0 ? '+' : '') + chP + '%)</b><br/>' +
+                        '成交量：<b>' + (d.vol / 100).toFixed(0) + ' 手</b>';
+                }
+            },
+            axisPointer: {
+                link: [{ xAxisIndex: 'all' }]
+            },
+            grid: [
+                { left: '8%', right: '3%', top: '5%', height: '72%' },
+                { left: '8%', right: '3%', top: '82%', height: '14%' }
+            ],
+            xAxis: [
+                { type: 'category', data: dates, gridIndex: 0, axisLine: { lineStyle: { color: '#ddd' } },
+                  axisLabel: { fontSize: 11 }, boundaryGap: true },
+                { type: 'category', data: dates, gridIndex: 1, axisLine: { lineStyle: { color: '#ddd' } },
+                  axisLabel: { show: false }, boundaryGap: true }
+            ],
+            yAxis: [
+                { scale: true, gridIndex: 0, splitArea: { show: true, areaStyle: { color: ['#fafafa', '#fff'] } },
+                  splitLine: { lineStyle: { color: '#f0f0f0' } }, axisLabel: { fontSize: 11, formatter: '¥{value}' } },
+                { scale: true, gridIndex: 1, splitNumber: 2,
+                  axisLabel: { fontSize: 10, formatter: function(v) { return (v / 10000).toFixed(0) + '万'; } },
+                  axisLine: { show: false }, axisTick: { show: false }, splitLine: { show: false } }
+            ],
+            series: [
+                { name: 'K线', type: 'candlestick', xAxisIndex: 0, yAxisIndex: 0, data: klineData,
+                  itemStyle: {
+                      color: '#e8343e', color0: '#1baa46',
+                      borderColor: '#e8343e', borderColor0: '#1baa46'
+                  } },
+                { name: 'MA5',  type: 'line', xAxisIndex: 0, yAxisIndex: 0, data: ma5,
+                  lineStyle: { color: '#e8a838', width: 1 }, symbol: 'none',
+                  smooth: false, connectNulls: false },
+                { name: 'MA10', type: 'line', xAxisIndex: 0, yAxisIndex: 0, data: ma10,
+                  lineStyle: { color: '#5b8ff9', width: 1 }, symbol: 'none',
+                  smooth: false, connectNulls: false },
+                { name: 'MA20', type: 'line', xAxisIndex: 0, yAxisIndex: 0, data: ma20,
+                  lineStyle: { color: '#bf5bdf', width: 1 }, symbol: 'none',
+                  smooth: false, connectNulls: false },
+                { name: '成交量', type: 'bar', xAxisIndex: 1, yAxisIndex: 1,
+                  data: volData.map(function(v) {
+                      return { value: v[1], itemStyle: { color: v[2] > 0 ? '#e8343e' : '#1baa46' } };
+                  }) }
+            ]
+        });
+
+        // ---- 成交量图 (独立图表以支持独立缩放) ----
+        var chartVolume = echarts.init(document.getElementById('chartVolume'));
+        chartVolume.setOption({
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: { type: 'shadow' },
+                backgroundColor: 'rgba(255,255,255,0.95)',
+                borderColor: '#ddd',
+                textStyle: { color: '#333', fontSize: 12 },
+                formatter: function(params) {
+                    var d = rawData[params[0].dataIndex];
+                    return '<b>' + d.date + '</b><br/>成交量：<b>' + (d.vol / 100).toFixed(0) + ' 手</b>';
+                }
+            },
+            grid: { left: '8%', right: '3%', top: '5%', height: '75%' },
+            xAxis: { type: 'category', data: dates, axisLine: { lineStyle: { color: '#ddd' } },
+                     axisLabel: { fontSize: 11 } },
+            yAxis: {
+                scale: true,
+                axisLabel: { fontSize: 11, formatter: function(v) { return (v / 10000).toFixed(0) + '万'; } },
+                splitLine: { lineStyle: { color: '#f0f0f0' } }
+            },
+            series: [{
+                name: '成交量', type: 'bar',
+                data: volData.map(function(v) {
+                    return { value: v[1], itemStyle: { color: v[2] > 0 ? '#e8343e' : '#1baa46' } };
+                })
+            }]
+        });
+
+        // ---- 联动 ----
+        chartKline.group = 'stock';
+        chartVolume.group = 'stock';
+        echarts.connect('stock');
+
+        window.addEventListener('resize', function() {
+            chartKline.resize();
+            chartVolume.resize();
+        });
+    </script>
+</body>
+</html>
