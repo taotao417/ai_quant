@@ -44,7 +44,7 @@ md("""# 杰瑞股份 (002353.SZ) 量化分析报告 (完整版)
 # ==================== 第1章：环境准备 ====================
 md("""## 1. 环境准备与数据加载
 
-导入所需的 Python 库，加载已存储的日线数据（注：数据为**不复权**格式，期间两次分红共¥0.85/股，对指标计算影响<0.8%，可忽略）。""")
+导入所需的 Python 库，加载已存储的日线数据（注：数据已做**前复权**处理，基于 Tushare 复权因子 adj_factor 计算）。""")
 
 code("""import pandas as pd
 import numpy as np
@@ -68,7 +68,7 @@ plt.rcParams['figure.figsize'] = (16, 9)
 print('✅ 环境准备完毕')""")
 
 code("""# 加载数据
-df = pd.read_csv('杰瑞股份_日线.csv')
+df = pd.read_csv('杰瑞股份_日线_前复权.csv')
 df['date'] = pd.to_datetime(df['date'])
 df.set_index('date', inplace=True)
 df.sort_index(inplace=True)
@@ -84,7 +84,7 @@ print(f'   最低价: ¥{df["low"].min():.2f}')
 total_pct = (df["close"].iloc[-1]/df["close"].iloc[0] - 1) * 100
 print(f'   总涨幅: {total_pct:+.2f}%')
 print(f'   总成交额: ¥{df["amount"].sum()/1e8:.1f}亿')
-print(f'   数据复权状态: 不复权（注：期间分红共¥0.85，影响<0.8%）')""")
+print(f'   数据复权状态: 前复权（基于 Tushare adj_factor，最新因子 8.7659）')""")
 
 code("""# 前5行和后5行预览
 print('=== 前5个交易日 ===')
@@ -939,7 +939,7 @@ md("""## 18. 总结
 - ⚠️ 最大回撤-25%提示需做好仓位管理
 
 ---
-*数据来源: Tushare Pro | 数据状态: 不复权 | 生成: WorkBuddy AI*""")
+*数据来源: Tushare Pro | 数据状态: 前复权 | 生成: WorkBuddy AI*""")
 
 # ==================== 组装 ====================
 nb.cells = cells
