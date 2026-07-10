@@ -1,7 +1,6 @@
 name: Deploy to GitHub Pages (Voilà)
 
 # 把交互式笔记本 双均线策略回测.ipynb 渲染为网页并发布到 GitHub Pages。
-# 仓库需包含：双均线策略回测.ipynb、dual_ma_lib.py、export_results.py、以及所有数据 CSV。
 # 仓库设置：Settings → Pages → Build and deployment → Source 选 "GitHub Actions"。
 
 on:
@@ -32,13 +31,16 @@ jobs:
         run: |
           pip install --quiet jupyter voila ipywidgets pandas numpy matplotlib nbformat
 
+      - name: Install CJK font (避免中文图表乱码)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fonts-noto-cjk
+
       - name: Build Voilà site
         run: |
           mkdir -p _site
           voila "双均线策略回测.ipynb" \
             --OutputDir=_site \
-            --exclude-task \
-            --no-banner \
             --theme=dark
 
       - uses: actions/upload-pages-artifact@v3
